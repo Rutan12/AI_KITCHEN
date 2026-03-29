@@ -50,65 +50,85 @@ if dish:
 
         uploaded_file = st.file_uploader("Upload Refrigerator Image")
 
-        if uploaded_file:
+       # ✅ MULTIPLE IMAGE UPLOAD (MAX 3)
+uploaded_files = st.file_uploader(
+    "Upload Refrigerator Images (max 3)",
+    accept_multiple_files=True
+)
+
+if uploaded_files:
+
+    # 🔴 Limit to 3 images
+    if len(uploaded_files) > 3:
+        st.error("You can upload maximum 3 images only.")
+    else:
+        all_detected = []
+
+        # Show images + collect detections
+        for uploaded_file in uploaded_files:
             image = Image.open(uploaded_file)
             st.image(image, caption="Uploaded Image")
 
-            # 🔁 AI DETECTION (Mock for now)
+            # 🔁 MOCK detection (same logic)
             detected_items = ["milk", "egg", "apple"]
 
-            st.subheader("🔍 AI Detected Objects")
-            st.write(detected_items)
+            all_detected.extend(detected_items)
 
-            # 🔥 HYBRID PART (USER CORRECTION)
-            st.subheader("✏️ Confirm / Edit Detected Ingredients")
+        # Remove duplicates
+        detected_items = list(set(all_detected))
 
-            manual_items = st.multiselect(
-                "Adjust detected ingredients if needed:",
-                ["milk", "egg", "apple", "bread", "butter", "sugar", "flour"],
-                default=detected_items
-            )
+        st.subheader("🔍 AI Detected Objects")
+        st.write(detected_items)
 
-            detected_items = manual_items
+        # 🔥 HYBRID PART (USER CORRECTION)
+        st.subheader("✏️ Confirm / Edit Detected Ingredients")
 
-            st.subheader("✅ Final Ingredients Used")
-            st.write(detected_items)
+        manual_items = st.multiselect(
+            "Adjust detected ingredients if needed:",
+            ["milk", "egg", "apple", "bread", "butter", "sugar", "flour"],
+            default=detected_items
+        )
 
-            # 🔧 SIMPLE MATCHING
-            available = []
-            missing = []
+        detected_items = manual_items
 
-            for req in recipe_ingredients:
-                req_norm = normalize(req)
+        st.subheader("✅ Final Ingredients Used")
+        st.write(detected_items)
 
-                if (
-                    "egg" in req_norm and "egg" in detected_items
-                ) or (
-                    "milk" in detected_items and ("milk" in req_norm or "cream" in req_norm)
-                ) or (
-                    "apple" in detected_items and "apple" in req_norm
-                ) or (
-                    "bread" in detected_items and "bread" in req_norm
-                ) or (
-                    "butter" in detected_items and "butter" in req_norm
-                ) or (
-                    "sugar" in detected_items and "sugar" in req_norm
-                ) or (
-                    "flour" in detected_items and "flour" in req_norm
-                ):
-                    available.append(req)
-                else:
-                    missing.append(req)
+        # 🔧 SIMPLE MATCHING
+        available = []
+        missing = []
 
-            st.subheader("✅ Available Ingredients")
-            st.write(available)
+        for req in recipe_ingredients:
+            req_norm = normalize(req)
 
-            st.subheader("❌ Missing Ingredients")
-            st.write(missing)
-
-            # Final result
-            if len(missing) == 0:
-                st.success("🎉 You can cook this recipe!")
-                st.balloons()
+            if (
+                "egg" in req_norm and "egg" in detected_items
+            ) or (
+                "milk" in detected_items and ("milk" in req_norm or "cream" in req_norm)
+            ) or (
+                "apple" in detected_items and "apple" in req_norm
+            ) or (
+                "bread" in detected_items and "bread" in req_norm
+            ) or (
+                "butter" in detected_items and "butter" in req_norm
+            ) or (
+                "sugar" in detected_items and "sugar" in req_norm
+            ) or (
+                "flour" in detected_items and "flour" in req_norm
+            ):
+                available.append(req)
             else:
-                st.error("❌ Some ingredients are missing.")
+                missing.append(req)
+
+        st.subheader("✅ Available Ingredients")
+        st.write(available)
+
+        st.subheader("❌ Missing Ingredients")
+        st.write(missing)
+
+        # Final result
+        if len(missing) == 0:
+            st.success("🎉 You can cook this recipe!")
+            st.balloons()
+        else:
+            st.error("❌ Some ingredients are missing.")
