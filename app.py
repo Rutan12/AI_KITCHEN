@@ -5,7 +5,10 @@ import streamlit as st
 import requests
 from PIL import Image
 
-# 🎯 DEMO RECIPES (SAFE)
+# 🔐 API KEY
+API_KEY = "a6f8e7f144914460895286c5273aa10f"
+
+# 🎯 DEMO RECIPES
 demo_recipes = {
     "Simple Custard": ["milk", "eggs", "sugar"],
     "French Toast": ["bread", "eggs", "milk", "butter"],
@@ -13,94 +16,101 @@ demo_recipes = {
     "Bread Pudding": ["bread", "milk", "eggs", "sugar"]
 }
 
-# 🔐 API KEY
-API_KEY = "a6f8e7f144914460895286c5273aa10f"
-
 # Normalize
 def normalize(text):
     return text.lower().strip().rstrip('s')
 
-# Fetch recipes
+# API functions
 def get_recipes(query):
     url = "https://api.spoonacular.com/recipes/complexSearch"
     params = {"query": query, "number": 5, "apiKey": API_KEY}
     res = requests.get(url, params=params).json()
     return res.get("results", [])
 
-# Fetch ingredients
 def get_ingredients(recipe_id):
     url = f"https://api.spoonacular.com/recipes/{recipe_id}/information"
     params = {"apiKey": API_KEY}
     res = requests.get(url, params=params).json()
     return [i['name'] for i in res.get('extendedIngredients', [])]
 
-# UI
-st.set_page_config(page_title="AI Kitchen", layout="centered")
-st.title("🍳 AI Kitchen - Smart Recipe Feasibility System")
+# 🎨 UI SETTINGS
+st.set_page_config(page_title="AI Kitchen", layout="wide", page_icon="🍳")
 
+st.markdown("""
+# 🍳 AI Kitchen  
+### Smart Recipe Feasibility System
+---
+""")
+
+# INPUT
 dish = st.text_input("Enter Dish Name")
 
 if dish:
 
-    # ✅ Toggle for demo mode
-    use_demo = st.checkbox("Use Demo Recipes (Recommended for Demo)")
+    # DEMO MODE
+    use_demo = st.checkbox("Use Demo Recipes")
 
     if use_demo:
         choice = st.selectbox("Select Recipe", list(demo_recipes.keys()))
         recipe_ingredients = demo_recipes[choice]
-
     else:
         recipes = get_recipes(dish)
 
         if len(recipes) == 0:
             st.error("No recipes found")
+            st.stop()
 
-        else:
-            recipe_titles = [r['title'] for r in recipes]
-            choice = st.selectbox("Select Recipe", recipe_titles)
+        recipe_titles = [r['title'] for r in recipes]
+        choice = st.selectbox("Select Recipe", recipe_titles)
 
-            recipe_id = recipes[recipe_titles.index(choice)]['id']
-            recipe_ingredients = get_ingredients(recipe_id)
+        recipe_id = recipes[recipe_titles.index(choice)]['id']
+        recipe_ingredients = get_ingredients(recipe_id)
 
-        st.subheader("🧾 Required Ingredients")
-        st.write(recipe_ingredients)
+    # INGREDIENTS
+    st.markdown("---")
+    st.subheader("🧾 Required Ingredients")
 
-        
-       # ✅ MULTIPLE IMAGE UPLOAD (MAX 3)
-uploaded_files = st.file_uploader(
-    "Upload Refrigerator Images (max 3)",
-    accept_multiple_files=True
-)
+    for item in recipe_ingredients:
+        st.write(f"• {item}")
 
-if uploaded_files:
+    # MULTIPLE IMAGE UPLOAD
+    uploaded_files = st.file_uploader(
+        "Upload Refrigerator Images (max 3)",
+        accept_multiple_files=True
+    )
 
-    # 🔴 Limit to 3 images
-    if len(uploaded_files) > 3:
-        st.error("You can upload maximum 3 images only.")
-    else:
+    if uploaded_files:
+
+        if len(uploaded_files) > 3:
+            st.error("You can upload maximum 3 images only.")
+            st.stop()
+
+        st.markdown("---")
+        st.subheader("📸 Uploaded Images")
+
+        cols = st.columns(len(uploaded_files))
+
         all_detected = []
 
-        # Show images + collect detections
-        for uploaded_file in uploaded_files:
+        for i, uploaded_file in enumerate(uploaded_files):
             image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image")
+            cols[i].image(image, caption=f"Image {i+1}")
 
-            # 🔁 MOCK detection (same logic)
+            # MOCK DETECTION
             detected_items = ["milk", "egg", "apple"]
-
             all_detected.extend(detected_items)
 
-        # Remove duplicates
         detected_items = list(set(all_detected))
 
+        st.markdown("---")
         st.subheader("🔍 AI Detected Objects")
         st.write(detected_items)
 
-        # 🔥 HYBRID PART (USER CORRECTION)
-        st.subheader("✏️ Confirm / Edit Detected Ingredients")
+        # USER CORRECTION
+        st.subheader("✏️ Confirm / Edit Ingredients")
 
         manual_items = st.multiselect(
-            "Adjust detected ingredients if needed:",
+            "Adjust detected ingredients:",
             ["milk", "egg", "apple", "bread", "butter", "sugar", "flour"],
             default=detected_items
         )
@@ -110,7 +120,7 @@ if uploaded_files:
         st.subheader("✅ Final Ingredients Used")
         st.write(detected_items)
 
-        # 🔧 SIMPLE MATCHING
+        # MATCHING LOGIC
         available = []
         missing = []
 
@@ -136,14 +146,31 @@ if uploaded_files:
             else:
                 missing.append(req)
 
-        st.subheader("✅ Available Ingredients")
-        st.write(available)
+        # RESULTS
+        st.markdown("---")
 
-        st.subheader("❌ Missing Ingredients")
-        st.write(missing)
+        col1, col2 = st.columns(2)
 
-        # Final result
+        with col1:
+            st.subheader("✅ Available Ingredients")
+            for item in available:
+                st.write(f"✔ {item}")
+
+        with col2:
+            st.subheader("❌ Missing Ingredients")
+            for item in missing:
+                st.write(f"✖ {item}")
+
+        # SUMMARY
+        st.markdown("---")
+        st.subheader("📊 Summary")
+
+        col1, col2 = st.columns(2)
+        col1.metric("Available", len(available))
+        col2.metric("Missing", len(missing))
+
+        # FINAL MESSAGE
         if len(missing) == 0:
-            st.success("🎉 You can cook this recipe!")
+            st.success("All required ingredients are available.")
         else:
-            st.error("❌ Some ingredients are missing.")
+            st.warning("Some ingredients are missing.")
