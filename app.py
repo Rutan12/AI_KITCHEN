@@ -8,16 +8,9 @@ from PIL import Image
 # 🔐 API KEY
 API_KEY = "a6f8e7f144914460895286c5273aa10f"
 
-# 🔧 Normalize text
+# Normalize
 def normalize(text):
     return text.lower().strip().rstrip('s')
-
-# 🔧 Smart ingredient mapping (IMPORTANT)
-ingredient_map = {
-    "egg": ["egg", "eggs", "egg yolk", "egg yolks"],
-    "milk": ["milk", "cream", "heavy cream", "whipping cream"],
-    "apple": ["apple"]
-}
 
 # Fetch recipes
 def get_recipes(query):
@@ -33,11 +26,10 @@ def get_ingredients(recipe_id):
     res = requests.get(url, params=params).json()
     return [i['name'] for i in res.get('extendedIngredients', [])]
 
-# 🎨 UI
+# UI
 st.set_page_config(page_title="AI Kitchen", layout="centered")
 st.title("🍳 AI Kitchen - Smart Recipe Feasibility System")
 
-# Step 1: Dish input
 dish = st.text_input("Enter Dish Name")
 
 if dish:
@@ -56,44 +48,54 @@ if dish:
         st.subheader("🧾 Required Ingredients")
         st.write(recipe_ingredients)
 
-        # Step 2: Upload image
         uploaded_file = st.file_uploader("Upload Refrigerator Image")
 
         if uploaded_file:
             image = Image.open(uploaded_file)
             st.image(image, caption="Uploaded Image")
 
-            # 🔁 MOCK detection (deployment-safe)
+            # 🔁 AI DETECTION (Mock for now)
             detected_items = ["milk", "egg", "apple"]
 
-            st.subheader("🔍 Detected Objects")
+            st.subheader("🔍 AI Detected Objects")
             st.write(detected_items)
 
-            # 🔥 SMART MATCHING LOGIC
+            # 🔥 HYBRID PART (USER CORRECTION)
+            st.subheader("✏️ Confirm / Edit Detected Ingredients")
+
+            manual_items = st.multiselect(
+                "Adjust detected ingredients if needed:",
+                ["milk", "egg", "apple", "bread", "butter", "sugar", "flour"],
+                default=detected_items
+            )
+
+            detected_items = manual_items
+
+            st.subheader("✅ Final Ingredients Used")
+            st.write(detected_items)
+
+            # 🔧 SIMPLE MATCHING
             available = []
             missing = []
 
             for req in recipe_ingredients:
                 req_norm = normalize(req)
-                found = False
 
-                for det in detected_items:
-                    det_norm = normalize(det)
-
-                    # Check mapping (SMART MATCH)
-                    if det_norm in ingredient_map:
-                        for mapped_item in ingredient_map[det_norm]:
-                            if mapped_item in req_norm:
-                                found = True
-                                break
-                    # Direct partial match
-                    if det_norm in req_norm:
-                        found = True
-
-                    if found:
-                        break
-
-                if found:
+                if (
+                    "egg" in req_norm and "egg" in detected_items
+                ) or (
+                    "milk" in detected_items and ("milk" in req_norm or "cream" in req_norm)
+                ) or (
+                    "apple" in detected_items and "apple" in req_norm
+                ) or (
+                    "bread" in detected_items and "bread" in req_norm
+                ) or (
+                    "butter" in detected_items and "butter" in req_norm
+                ) or (
+                    "sugar" in detected_items and "sugar" in req_norm
+                ) or (
+                    "flour" in detected_items and "flour" in req_norm
+                ):
                     available.append(req)
                 else:
                     missing.append(req)
@@ -104,7 +106,7 @@ if dish:
             st.subheader("❌ Missing Ingredients")
             st.write(missing)
 
-            # 🎯 Final Result
+            # Final result
             if len(missing) == 0:
                 st.success("🎉 You can cook this recipe!")
                 st.balloons()
