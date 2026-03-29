@@ -145,6 +145,5 @@ if uploaded_files:
         # Final result
         if len(missing) == 0:
             st.success("🎉 You can cook this recipe!")
-            st.balloons()
         else:
             st.error("❌ Some ingredients are missing.")
