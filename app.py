@@ -5,6 +5,14 @@ import streamlit as st
 import requests
 from PIL import Image
 
+# 🎯 DEMO RECIPES (SAFE)
+demo_recipes = {
+    "Simple Custard": ["milk", "eggs", "sugar"],
+    "French Toast": ["bread", "eggs", "milk", "butter"],
+    "Pancakes": ["flour", "milk", "eggs", "sugar"],
+    "Bread Pudding": ["bread", "milk", "eggs", "sugar"]
+}
+
 # 🔐 API KEY
 API_KEY = "a6f8e7f144914460895286c5273aa10f"
 
@@ -33,17 +41,26 @@ st.title("🍳 AI Kitchen - Smart Recipe Feasibility System")
 dish = st.text_input("Enter Dish Name")
 
 if dish:
-    recipes = get_recipes(dish)
 
-    if len(recipes) == 0:
-        st.error("No recipes found")
+    # ✅ Toggle for demo mode
+    use_demo = st.checkbox("Use Demo Recipes (Recommended for Demo)")
+
+    if use_demo:
+        choice = st.selectbox("Select Recipe", list(demo_recipes.keys()))
+        recipe_ingredients = demo_recipes[choice]
 
     else:
-        recipe_titles = [r['title'] for r in recipes]
-        choice = st.selectbox("Select Recipe", recipe_titles)
+        recipes = get_recipes(dish)
 
-        recipe_id = recipes[recipe_titles.index(choice)]['id']
-        recipe_ingredients = get_ingredients(recipe_id)
+        if len(recipes) == 0:
+            st.error("No recipes found")
+
+        else:
+            recipe_titles = [r['title'] for r in recipes]
+            choice = st.selectbox("Select Recipe", recipe_titles)
+
+            recipe_id = recipes[recipe_titles.index(choice)]['id']
+            recipe_ingredients = get_ingredients(recipe_id)
 
         st.subheader("🧾 Required Ingredients")
         st.write(recipe_ingredients)
