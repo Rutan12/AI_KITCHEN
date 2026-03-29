@@ -70,34 +70,33 @@ if dish:
             st.write(detected_items)
 
             # 🔥 SMART MATCHING LOGIC
-           available = []
-missing = []
+            available = []
+            missing = []
 
-for req in recipe_ingredients:
-    req_norm = normalize(req)
-    found = False
+            for req in recipe_ingredients:
+                req_norm = normalize(req)
+                found = False
 
-    for det in detected_items:
-        det_norm = normalize(det)
+                for det in detected_items:
+                    det_norm = normalize(det)
 
-        # Check mapping (SMART MATCH)
-        if det_norm in ingredient_map:
-            for mapped_item in ingredient_map[det_norm]:
-                if mapped_item in req_norm:
-                    found = True
-                    break
+                    # Check mapping (SMART MATCH)
+                    if det_norm in ingredient_map:
+                        for mapped_item in ingredient_map[det_norm]:
+                            if mapped_item in req_norm:
+                                found = True
+                                break
+                    # Direct partial match
+                    if det_norm in req_norm:
+                        found = True
 
-        # Direct partial match
-        if det_norm in req_norm:
-            found = True
+                    if found:
+                        break
 
-        if found:
-            break
-
-    if found:
-        available.append(req)
-    else:
-        missing.append(req)
+                if found:
+                    available.append(req)
+                else:
+                    missing.append(req)
 
             st.subheader("✅ Available Ingredients")
             st.write(available)
