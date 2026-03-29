@@ -48,8 +48,7 @@ if dish:
         st.subheader("🧾 Required Ingredients")
         st.write(recipe_ingredients)
 
-        uploaded_file = st.file_uploader("Upload Refrigerator Image")
-
+        
        # ✅ MULTIPLE IMAGE UPLOAD (MAX 3)
 uploaded_files = st.file_uploader(
     "Upload Refrigerator Images (max 3)",
