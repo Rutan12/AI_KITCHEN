@@ -6,7 +6,7 @@ import requests
 from PIL import Image
 
 # Spoonacular API
-API_KEY = "YOUR_API_KEY"
+API_KEY = "a6f8e7f144914460895286c5273aa10f"
 
 # Fetch recipes
 def get_recipes(query):
