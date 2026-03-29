@@ -5,8 +5,19 @@ import streamlit as st
 import requests
 from PIL import Image
 
-# Spoonacular API
+# 🔐 API KEY
 API_KEY = "a6f8e7f144914460895286c5273aa10f"
+
+# 🔧 Normalize text
+def normalize(text):
+    return text.lower().strip().rstrip('s')
+
+# 🔧 Smart ingredient mapping (IMPORTANT)
+ingredient_map = {
+    "egg": ["egg", "eggs", "egg yolk", "egg yolks"],
+    "milk": ["milk", "cream", "heavy cream", "whipping cream"],
+    "apple": ["apple"]
+}
 
 # Fetch recipes
 def get_recipes(query):
@@ -22,9 +33,11 @@ def get_ingredients(recipe_id):
     res = requests.get(url, params=params).json()
     return [i['name'] for i in res.get('extendedIngredients', [])]
 
-# UI
+# 🎨 UI
+st.set_page_config(page_title="AI Kitchen", layout="centered")
 st.title("🍳 AI Kitchen - Smart Recipe Feasibility System")
 
+# Step 1: Dish input
 dish = st.text_input("Enter Dish Name")
 
 if dish:
@@ -43,27 +56,53 @@ if dish:
         st.subheader("🧾 Required Ingredients")
         st.write(recipe_ingredients)
 
-        # Upload image
+        # Step 2: Upload image
         uploaded_file = st.file_uploader("Upload Refrigerator Image")
 
         if uploaded_file:
             image = Image.open(uploaded_file)
             st.image(image, caption="Uploaded Image")
 
-            # MOCK detection
+            # 🔁 MOCK detection (deployment-safe)
             detected_items = ["milk", "egg", "apple"]
 
             st.subheader("🔍 Detected Objects")
             st.write(detected_items)
 
-            detected_set = set(detected_items)
-            required_set = set(recipe_ingredients)
+            # 🔥 SMART MATCHING LOGIC
+            available = []
+            missing = []
 
-            available = detected_set.intersection(required_set)
-            missing = required_set - detected_set
+            for req in recipe_ingredients:
+                req_norm = normalize(req)
+                found = False
+
+                for det in detected_items:
+                    det_norm = normalize(det)
+
+                    if det_norm in ingredient_map:
+                        if req_norm in ingredient_map[det_norm]:
+                            found = True
+                            break
+
+                    if det_norm in req_norm:
+                        found = True
+                        break
+
+                if found:
+                    available.append(req)
+                else:
+                    missing.append(req)
 
             st.subheader("✅ Available Ingredients")
-            st.write(list(available))
+            st.write(available)
 
             st.subheader("❌ Missing Ingredients")
-            st.write(list(missing))
+            st.write(missing)
+
+            # 🎯 Final Result
+            if len(missing) == 0:
+                st.success("🎉 You can cook this recipe!")
+                st.balloons()
+            else:
+                st.error("❌ Some ingredients are missing.")
