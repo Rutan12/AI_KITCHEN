@@ -92,13 +92,27 @@ detected_items = ["milk", "egg", "apple"]
             available = detected_set.intersection(required_set)
             missing = required_set - detected_set
 
-            st.subheader("✅ Available Ingredients")
-            st.write(list(available))
+           uploaded_file = st.file_uploader("Upload Refrigerator Image")
 
-            st.subheader("❌ Missing Ingredients")
-            st.write(list(missing))
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image")
 
-            if len(missing) == 0:
-                st.success("🎉 You can cook this recipe!")
-            else:
-                st.warning("⚠️ Some ingredients are missing.")
+    # MOCK detection (temporary)
+    detected_items = ["milk", "egg", "apple"]
+
+    st.subheader("🔍 Detected Objects")
+    st.write(detected_items)
+
+    # Convert to set
+    detected_set = set(detected_items)
+    required_set = set(recipe_ingredients)
+
+    available = detected_set.intersection(required_set)
+    missing = required_set - detected_set
+
+    st.subheader("✅ Available Ingredients")
+    st.write(list(available))
+
+    st.subheader("❌ Missing Ingredients")
+    st.write(list(missing))
