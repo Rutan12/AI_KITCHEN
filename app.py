@@ -2,13 +2,8 @@ import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 import streamlit as st
-# from ultralytics import YOLO
-# model = YOLO("yolov8n.pt")
 import requests
 from PIL import Image
-import tempfile
-
-
 
 # Spoonacular API
 API_KEY = "YOUR_API_KEY"
@@ -27,21 +22,9 @@ def get_ingredients(recipe_id):
     res = requests.get(url, params=params).json()
     return [i['name'] for i in res.get('extendedIngredients', [])]
 
-# Mapping detected objects → ingredients
-ingredient_map = {
-    "apple": "apple",
-    "orange": "orange",
-    "banana": "banana",
-    "bottle": "milk",
-    "bowl": "flour",
-    "carrot": "carrot",
-    "broccoli": "vegetable"
-}
-
 # UI
 st.title("🍳 AI Kitchen - Smart Recipe Feasibility System")
 
-# Step 1: Enter Dish
 dish = st.text_input("Enter Dish Name")
 
 if dish:
@@ -60,59 +43,27 @@ if dish:
         st.subheader("🧾 Required Ingredients")
         st.write(recipe_ingredients)
 
-        # Step 2: Upload Image
-       # YOLO removed for deployment
+        # Upload image
+        uploaded_file = st.file_uploader("Upload Refrigerator Image")
 
-uploaded_file = st.file_uploader("Upload Refrigerator Image")
+        if uploaded_file:
+            image = Image.open(uploaded_file)
+            st.image(image, caption="Uploaded Image")
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image)
-
-    # MOCK detection
-    detected_items = ["milk", "egg", "apple"]
-
-    st.write("Detected Objects:", detected_items)
-
-                # TEMP MOCK (for deployment)
-detected_items = ["milk", "egg", "apple"]
+            # MOCK detection
+            detected_items = ["milk", "egg", "apple"]
 
             st.subheader("🔍 Detected Objects")
-            st.write(set(detected_items))
+            st.write(detected_items)
 
-            # Map items
-            mapped = []
-            for item in detected_items:
-                if item in ingredient_map:
-                    mapped.append(ingredient_map[item])
-
-            detected_set = set(mapped)
+            detected_set = set(detected_items)
             required_set = set(recipe_ingredients)
 
             available = detected_set.intersection(required_set)
             missing = required_set - detected_set
 
-           uploaded_file = st.file_uploader("Upload Refrigerator Image")
+            st.subheader("✅ Available Ingredients")
+            st.write(list(available))
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image")
-
-    # MOCK detection (temporary)
-    detected_items = ["milk", "egg", "apple"]
-
-    st.subheader("🔍 Detected Objects")
-    st.write(detected_items)
-
-    # Convert to set
-    detected_set = set(detected_items)
-    required_set = set(recipe_ingredients)
-
-    available = detected_set.intersection(required_set)
-    missing = required_set - detected_set
-
-    st.subheader("✅ Available Ingredients")
-    st.write(list(available))
-
-    st.subheader("❌ Missing Ingredients")
-    st.write(list(missing))
+            st.subheader("❌ Missing Ingredients")
+            st.write(list(missing))
