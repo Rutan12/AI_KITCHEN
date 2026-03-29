@@ -2,13 +2,13 @@ import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 import streamlit as st
-from ultralytics import YOLO
+# from ultralytics import YOLO
+# model = YOLO("yolov8n.pt")
 import requests
 from PIL import Image
 import tempfile
 
-# Load YOLO model
-model = YOLO("yolov8n.pt")
+
 
 # Spoonacular API
 API_KEY = "YOUR_API_KEY"
@@ -61,25 +61,21 @@ if dish:
         st.write(recipe_ingredients)
 
         # Step 2: Upload Image
-        uploaded_file = st.file_uploader("Upload Refrigerator Image")
+       # YOLO removed for deployment
 
-        if uploaded_file:
-            image = Image.open(uploaded_file)
-            st.image(image, caption="Uploaded Image")
+uploaded_file = st.file_uploader("Upload Refrigerator Image")
 
-            # Save temp file
-            with tempfile.NamedTemporaryFile(delete=False) as tmp:
-                image.save(tmp.name)
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    st.image(image)
 
-                results = model(tmp.name)
+    # MOCK detection
+    detected_items = ["milk", "egg", "apple"]
 
-            detected_items = []
+    st.write("Detected Objects:", detected_items)
 
-            for r in results:
-                for box in r.boxes:
-                    cls = int(box.cls[0])
-                    label = model.names[cls]
-                    detected_items.append(label)
+                # TEMP MOCK (for deployment)
+detected_items = ["milk", "egg", "apple"]
 
             st.subheader("🔍 Detected Objects")
             st.write(set(detected_items))
